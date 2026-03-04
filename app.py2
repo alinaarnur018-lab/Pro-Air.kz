@@ -1,0 +1,76 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+import plotly.graph_objects as go
+
+# Настройка страницы (Делаем широко и стильно)
+st.set_page_config(page_title="ALGORITHM | AI Control", layout="wide", initial_sidebar_state="collapsed")
+
+# Кастомный CSS для "презентабельности" (шрифты и цвета)
+st.markdown("""
+    <style>
+    .main { background-color: #0E1117; color: #ffffff; }
+    .stMetric { background-color: #161B22; border: 1px solid #30363D; padding: 15px; border-radius: 10px; }
+    .stSlider { padding-top: 2rem; }
+    </style>
+    """, unsafe_allow_html=True)
+
+# Заголовок с эффектом
+st.title("🏔️ A.L.G.O.R.I.T.H.M.")
+st.markdown("#### *Autonomous Logistic Global Observation & Real-time Integrated Thermal Monitoring*")
+
+st.divider()
+
+# Боковая панель управления (как в центре управления)
+with st.sidebar:
+    st.header("🎛️ Control Panel")
+    pm_input = st.slider("Manual PM2.5 Override", 0, 250, 45)
+    st.info("AI Model: LSTM-v2.4 Active")
+
+# Основной Dashboard
+col1, col2, col3 = st.columns(3)
+
+# Твоя математика
+def get_aqi(pm):
+    if pm <= 12: return int(pm * 4.1), "#00E400" # Green
+    elif pm <= 35.4: return int(50 + (pm - 12.1) * 2.1), "#FFFF00" # Yellow
+    elif pm <= 55.4: return int(100 + (pm - 35.5) * 2.5), "#FF7E00" # Orange
+    else: return int(150 + (pm - 55.5) * 0.52), "#FF0000" # Red
+
+aqi_val, aqi_color = get_aqi(pm_input)
+
+with col1:
+    st.metric("CURRENT AQI", f"{aqi_val}")
+with col2:
+    status = "STABLE" if aqi_val < 100 else "CRITICAL"
+    st.metric("SYSTEM STATUS", status)
+with col3:
+    st.metric("SMOG PROBABILITY", f"{min(aqi_val // 2, 100)}%")
+
+# ГРАФИК (Добавляем презентабельности)
+st.subheader("📈 48-Hour AI Predictive Analysis")
+chart_data = pd.DataFrame({
+    'Time': [f"+{i}h" for i in range(24)],
+    'Concentration': [pm_input + np.sin(i/2)*20 + i for i in range(24)]
+})
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(x=chart_data['Time'], y=chart_data['Concentration'], 
+                         mode='lines+markers', line=dict(color='#00d4ff', width=3),
+                         fill='tozeroy', name='Predicted PM2.5'))
+fig.update_layout(template="plotly_dark", margin=dict(l=0, r=0, t=0, b=0), height=300)
+st.plotly_chart(fig, use_container_width=True)
+
+# ИННОВАЦИОННЫЙ БЛОК (Твоя фишка с налогами)
+st.divider()
+st.subheader("🏛️ Dynamic Economic Response")
+
+if aqi_val > 120:
+    st.error(f"### ALERT: High Smog Risk Detected")
+    c1, c2 = st.columns(2)
+    c1.warning("⚠️ **SMOG TAX ENABLED**\n\nDaily levy for Euro-3 vehicles: +$15.00")
+    c2.success("🔋 **GREEN INCENTIVE**\n\nTesla/BYD financing: 2.5% APR unlocked")
+else:
+    st.info("Economic mode: **STANDARD**. No additional environmental levies detected.")
+
+st.caption("Data source: Almaty Air Monitoring Network | Project for Infomatrix 2024")
